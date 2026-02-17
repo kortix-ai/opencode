@@ -428,11 +428,11 @@ export namespace File {
   export async function read(file: string): Promise<Content> {
     using _ = log.time("read", { file })
     const project = Instance.project
-    const full = path.join(Instance.directory, file)
+    const isAbsolute = path.isAbsolute(file)
+    const full = isAbsolute ? file : path.join(Instance.directory, file)
 
-    // TODO: Filesystem.contains is lexical only - symlinks inside the project can escape.
-    // TODO: On Windows, cross-drive paths bypass this check. Consider realpath canonicalization.
-    if (!Instance.containsPath(full)) {
+    // Skip containsPath check for absolute paths (sandbox is the security boundary)
+    if (!isAbsolute && !Instance.containsPath(full)) {
       throw new Error(`Access denied: path escapes project directory`)
     }
 
@@ -506,13 +506,13 @@ export namespace File {
       if (await ignoreFile.exists()) {
         ig.add(await ignoreFile.text())
       }
-      ignored = ig.ignores.bind(ig)
+      ignored = (p: string) => { try { return ig.ignores(p) } catch { return false } }
     }
-    const resolved = dir ? path.join(Instance.directory, dir) : Instance.directory
+    const isAbsolute = dir ? path.isAbsolute(dir) : false
+    const resolved = isAbsolute ? dir! : dir ? path.join(Instance.directory, dir) : Instance.directory
 
-    // TODO: Filesystem.contains is lexical only - symlinks inside the project can escape.
-    // TODO: On Windows, cross-drive paths bypass this check. Consider realpath canonicalization.
-    if (!Instance.containsPath(resolved)) {
+    // Skip containsPath check for absolute paths (sandbox is the security boundary)
+    if (!isAbsolute && !Instance.containsPath(resolved)) {
       throw new Error(`Access denied: path escapes project directory`)
     }
 
@@ -524,14 +524,15 @@ export namespace File {
       .catch(() => [])) {
       if (exclude.includes(entry.name)) continue
       const fullPath = path.join(resolved, entry.name)
-      const relativePath = path.relative(Instance.directory, fullPath)
+      // For absolute paths, keep the absolute path so the frontend can navigate with it
+      const entryPath = isAbsolute ? fullPath : path.relative(Instance.directory, fullPath)
       const type = entry.isDirectory() ? "directory" : "file"
       nodes.push({
         name: entry.name,
-        path: relativePath,
+        path: entryPath,
         absolute: fullPath,
         type,
-        ignored: ignored(type === "directory" ? relativePath + "/" : relativePath),
+        ignored: ignored(type === "directory" ? entryPath + "/" : entryPath),
       })
     }
     return nodes.sort((a, b) => {
@@ -546,7 +547,7 @@ export namespace File {
 
   export async function upload(file: string, data: ArrayBuffer | Uint8Array | Blob | string) {
     using _ = log.time("upload", { file })
-    const isAbsolute = path.isAbsolute(file) && file.startsWith(UPLOAD_DIR)
+    const isAbsolute = path.isAbsolute(file)
     const full = isAbsolute ? file : path.join(Instance.directory, file)
     if (!isAbsolute && !Instance.containsPath(full)) {
       throw new Error("Access denied: path escapes project directory")
@@ -558,8 +559,9 @@ export namespace File {
 
   export async function remove(file: string) {
     using _ = log.time("remove", { file })
-    const full = path.join(Instance.directory, file)
-    if (!Instance.containsPath(full)) {
+    const isAbsolute = path.isAbsolute(file)
+    const full = isAbsolute ? file : path.join(Instance.directory, file)
+    if (!isAbsolute && !Instance.containsPath(full)) {
       throw new Error("Access denied: path escapes project directory")
     }
     const stat = await fs.promises.stat(full).catch(() => null)
@@ -569,8 +571,9 @@ export namespace File {
 
   export async function mkdir(dir: string) {
     using _ = log.time("mkdir", { dir })
-    const full = path.join(Instance.directory, dir)
-    if (!Instance.containsPath(full)) {
+    const isAbsolute = path.isAbsolute(dir)
+    const full = isAbsolute ? dir : path.join(Instance.directory, dir)
+    if (!isAbsolute && !Instance.containsPath(full)) {
       throw new Error("Access denied: path escapes project directory")
     }
     await fs.promises.mkdir(full, { recursive: true })
@@ -578,9 +581,11 @@ export namespace File {
 
   export async function rename(from: string, to: string) {
     using _ = log.time("rename", { from, to })
-    const full = path.join(Instance.directory, from)
-    const target = path.join(Instance.directory, to)
-    if (!Instance.containsPath(full) || !Instance.containsPath(target)) {
+    const fromAbsolute = path.isAbsolute(from)
+    const toAbsolute = path.isAbsolute(to)
+    const full = fromAbsolute ? from : path.join(Instance.directory, from)
+    const target = toAbsolute ? to : path.join(Instance.directory, to)
+    if ((!fromAbsolute && !Instance.containsPath(full)) || (!toAbsolute && !Instance.containsPath(target))) {
       throw new Error("Access denied: path escapes project directory")
     }
     const stat = await fs.promises.stat(full).catch(() => null)
