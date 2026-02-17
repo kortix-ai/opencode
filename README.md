@@ -3,7 +3,7 @@
 > **This is a fork of [anomalyco/opencode](https://github.com/anomalyco/opencode).**
 > It is not built by or affiliated with the OpenCode team.
 
-This fork adds features missing from upstream: **file mutation endpoints**, **background async task execution**, and a **publishable CLI binary**. These additions enable external clients (like [Kortix Computer](https://github.com/kortix-ai/computer)) to manage project files and run non-blocking agent tasks through the OpenCode API.
+This fork adds features missing from upstream: **file mutation endpoints**, **project scanning**, and a **publishable CLI binary**. These additions enable external clients (like [Kortix Computer](https://github.com/kortix-ai/computer)) to manage project files through the OpenCode API.
 
 ### Install
 
@@ -39,6 +39,10 @@ Added to `packages/opencode/src/file/index.ts` inside the `File` namespace:
 - **`File.mkdir(dir)`** — Create directories recursively. Idempotent.
 - **`File.rename(from, to)`** — Move/rename a file or directory. Creates target parent directories.
 
+### Project Scanning
+
+- **`Project.scan(paths?)`** — Discovers all git repositories under given directories (defaults to `$KORTIX_WORKSPACE` or `$HOME`). Skips common non-project directories (node_modules, .git, vendor, etc.).
+
 ### SDK (`@kortix/opencode-sdk`)
 
 The generated TypeScript SDK (`packages/sdk/js/`) includes matching client methods on the `File` class:
@@ -71,20 +75,6 @@ await client.rename({ from: "old-name.ts", to: "new-name.ts" })
 - `File.rename` — rename, move into new directory, nonexistent source error, path traversal rejection (source and target)
 - HTTP endpoint tests — `POST /file/upload` (single, batch with target dir, binary), `DELETE /file`, `POST /file/mkdir`, `POST /file/rename`
 
-### Background Task Execution
-
-The `task` tool now supports a `background` parameter for fire-and-forget async execution:
-
-```
-task(description="Research OAuth2", prompt="...", subagent_type="general", background=true)
-```
-
-- Returns immediately with a `task_id`
-- Child agent runs in the background
-- Parent receives a `<task_completed>` notification when the child finishes
-- Survives context compaction (background task state is injected into compaction context)
-- 15-minute timeout safety net
-
 ### CLI Publishing (`@kortix/opencode-ai`)
 
 The Kortix fork builds and publishes its own CLI binary to npm as `@kortix/opencode-ai`. The binary includes build-time defines that point autoupdate checks at the Kortix npm package and GitHub releases instead of upstream.
@@ -104,28 +94,6 @@ The Kortix fork builds and publishes its own CLI binary to npm as `@kortix/openc
 |--------|---------|
 | `kortix` | Default. All Kortix additions merged here. |
 | `dev` | Upstream mirror (`anomalyco/opencode:dev`). Untouched. |
-
----
-
-## Files Changed
-
-```
-.github/workflows/sync-upstream.yml               — upstream sync automation
-.github/workflows/publish-kortix.yml               — CLI + SDK publish to npm
-packages/opencode/src/file/index.ts                — File.upload, remove, mkdir, rename
-packages/opencode/src/server/routes/file.ts        — POST /file/upload, DELETE /file, POST /file/mkdir, POST /file/rename
-packages/opencode/src/session/background.ts        — BackgroundTask namespace (async task tracking + notification)
-packages/opencode/src/tool/task.ts                 — background param on task tool
-packages/opencode/src/session/compaction.ts        — background task context in compaction
-packages/opencode/src/installation/index.ts        — configurable npm package + GitHub repo for autoupdate
-packages/opencode/script/build.ts                  — KORTIX_BUILD defines
-packages/opencode/script/publish-kortix.ts         — @kortix/opencode-ai publish script
-packages/opencode/test/file/write.test.ts          — 25 e2e tests
-packages/opencode/test/session/background.test.ts  — background task unit tests
-packages/sdk/js/script/publish-kortix.ts           — @kortix/opencode-sdk publish script
-packages/sdk/js/src/v2/gen/sdk.gen.ts              — regenerated SDK with new File methods
-packages/sdk/js/src/v2/gen/types.gen.ts            — regenerated types for new endpoints
-```
 
 ---
 
