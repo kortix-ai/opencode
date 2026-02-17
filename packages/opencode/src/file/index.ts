@@ -508,10 +508,14 @@ export namespace File {
       }
       ignored = (p: string) => { try { return ig.ignores(p) } catch { return false } }
     }
-    const isAbsolute = dir ? path.isAbsolute(dir) : false
-    const resolved = isAbsolute ? dir! : dir ? path.join(Instance.directory, dir) : Instance.directory
+    const fileRoot = process.env.OPENCODE_FILE_ROOT
+    const defaultDir = fileRoot || Instance.directory
+    const isAbsolute = dir ? path.isAbsolute(dir) : !!fileRoot
+    const resolved = dir
+      ? (path.isAbsolute(dir) ? dir : path.join(Instance.directory, dir))
+      : defaultDir
 
-    // Skip containsPath check for absolute paths (sandbox is the security boundary)
+    // Skip containsPath check for absolute paths or custom file root (sandbox is the security boundary)
     if (!isAbsolute && !Instance.containsPath(resolved)) {
       throw new Error(`Access denied: path escapes project directory`)
     }
