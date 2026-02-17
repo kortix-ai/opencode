@@ -164,9 +164,9 @@ describe("deleteFile", () => {
   test("throws on non-OK response", async () => {
     const mock = mockFetch({ status: 404, body: { error: "not found" } })
 
-    await expect(
-      deleteFile({ baseUrl: "http://localhost:4096", path: "nope.txt", fetch: mock.fn }),
-    ).rejects.toThrow("Delete failed (404)")
+    await expect(deleteFile({ baseUrl: "http://localhost:4096", path: "nope.txt", fetch: mock.fn })).rejects.toThrow(
+      "Delete failed (404)",
+    )
   })
 })
 
@@ -194,9 +194,9 @@ describe("mkdirFile", () => {
   test("throws on non-OK response", async () => {
     const mock = mockFetch({ status: 400, body: { error: "bad" } })
 
-    await expect(
-      mkdirFile({ baseUrl: "http://localhost:4096", path: "../../evil", fetch: mock.fn }),
-    ).rejects.toThrow("Mkdir failed (400)")
+    await expect(mkdirFile({ baseUrl: "http://localhost:4096", path: "../../evil", fetch: mock.fn })).rejects.toThrow(
+      "Mkdir failed (400)",
+    )
   })
 })
 
@@ -225,8 +225,8 @@ describe("renameFile", () => {
   test("throws on non-OK response", async () => {
     const mock = mockFetch({ status: 404, body: { error: "not found" } })
 
-    await expect(
-      renameFile({ baseUrl: "http://localhost:4096", from: "a", to: "b", fetch: mock.fn }),
-    ).rejects.toThrow("Rename failed (404)")
+    await expect(renameFile({ baseUrl: "http://localhost:4096", from: "a", to: "b", fetch: mock.fn })).rejects.toThrow(
+      "Rename failed (404)",
+    )
   })
 })

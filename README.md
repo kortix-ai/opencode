@@ -21,12 +21,12 @@ npm install @kortix/opencode-sdk
 
 ### New REST API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/file/upload` | Upload one or more files via `multipart/form-data`. Supports single file, batch upload, and an optional `path` field to specify a target directory. Binary-safe. |
-| `DELETE` | `/file` | Delete a file or directory recursively. JSON body: `{ "path": "relative/path" }` |
-| `POST` | `/file/mkdir` | Create a directory (recursive, idempotent). JSON body: `{ "path": "relative/path" }` |
-| `POST` | `/file/rename` | Rename or move a file/directory. Creates missing parent dirs. JSON body: `{ "from": "old", "to": "new" }` |
+| Method   | Path           | Description                                                                                                                                                      |
+| -------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST`   | `/file/upload` | Upload one or more files via `multipart/form-data`. Supports single file, batch upload, and an optional `path` field to specify a target directory. Binary-safe. |
+| `DELETE` | `/file`        | Delete a file or directory recursively. JSON body: `{ "path": "relative/path" }`                                                                                 |
+| `POST`   | `/file/mkdir`  | Create a directory (recursive, idempotent). JSON body: `{ "path": "relative/path" }`                                                                             |
+| `POST`   | `/file/rename` | Rename or move a file/directory. Creates missing parent dirs. JSON body: `{ "from": "old", "to": "new" }`                                                        |
 
 All endpoints enforce path traversal protection via `Instance.containsPath()` and emit `file.edited` events via the bus for real-time UI updates.
 
@@ -90,10 +90,10 @@ The Kortix fork builds and publishes its own CLI binary to npm as `@kortix/openc
 
 ## Branch Structure
 
-| Branch | Purpose |
-|--------|---------|
-| `kortix` | Default. All Kortix additions merged here. |
-| `dev` | Upstream mirror (`anomalyco/opencode:dev`). Untouched. |
+| Branch   | Purpose                                                |
+| -------- | ------------------------------------------------------ |
+| `kortix` | Default. All Kortix additions merged here.             |
+| `dev`    | Upstream mirror (`anomalyco/opencode:dev`). Untouched. |
 
 ---
 

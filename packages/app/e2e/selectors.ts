@@ -64,3 +64,30 @@ export const listItemKeyStartsWithSelector = (prefix: string) => `${listItemSele
 export const listItemKeySelector = (key: string) => `${listItemSelector}[data-key="${key}"]`
 
 export const keybindButtonSelector = (id: string) => `[data-keybind-id="${id}"]`
+
+// Project tab selectors
+export const projectTabSelector = '[data-component="project-tab"]'
+export const projectSectionInfoSelector = '[data-component="project-section-info"]'
+export const projectNameSelector = '[data-component="project-name"]'
+export const projectWorktreeSelector = '[data-component="project-worktree"]'
+export const projectEditSelector = '[data-action="project-edit"]'
+export const projectDeleteSelector = '[data-action="project-delete"]'
+export const projectSettingsSelector = '[data-action="project-settings"]'
+export const projectSectionAgentsSelector = '[data-component="project-section-agents"]'
+export const projectNoAgentsSelector = '[data-component="project-no-agents"]'
+export const agentCardSelector = '[data-component="agent-card"]'
+export const agentCardByNameSelector = (name: string) => `[data-component="agent-card"][data-agent="${name}"]`
+export const projectSectionSkillsSelector = '[data-component="project-section-skills"]'
+export const projectNoSkillsSelector = '[data-component="project-no-skills"]'
+export const skillCardSelector = '[data-component="skill-card"]'
+export const projectSectionMcpSelector = '[data-component="project-section-mcp"]'
+export const projectNoMcpSelector = '[data-component="project-no-mcp"]'
+export const mcpCardSelector = '[data-component="mcp-card"]'
+export const mcpCardByNameSelector = (name: string) => `[data-component="mcp-card"][data-mcp="${name}"]`
+export const projectSectionInstructionsSelector = '[data-component="project-section-instructions"]'
+export const projectNoInstructionsSelector = '[data-component="project-no-instructions"]'
+export const instructionCardSelector = '[data-component="instruction-card"]'
+export const projectSectionCommandsSelector = '[data-component="project-section-commands"]'
+export const projectNoCommandsSelector = '[data-component="project-no-commands"]'
+export const commandCardSelector = '[data-component="command-card"]'
+export const commandCardByNameSelector = (name: string) => `[data-component="command-card"][data-command="${name}"]`

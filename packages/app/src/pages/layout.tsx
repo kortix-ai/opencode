@@ -1654,6 +1654,49 @@ export default function Layout(props: ParentProps) {
     },
   }
 
+  const deleteProject = (project: LocalProject) => {
+    if (!project.id || project.id === "global") return
+    const name = project.name || getFilename(project.worktree)
+    dialog.show(() => (
+      <Dialog title={language.t("dialog.project.delete.title")} class="w-full max-w-[480px] mx-auto">
+        <div class="flex flex-col gap-4 p-6 pt-0">
+          <div class="text-14-regular text-text-base">{language.t("dialog.project.delete.confirm", { name })}</div>
+          <div class="flex justify-end gap-2">
+            <Button variant="ghost" size="large" onClick={() => dialog.close()}>
+              {language.t("common.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              size="large"
+              class="!bg-red-600 hover:!bg-red-700"
+              onClick={async () => {
+                try {
+                  await globalSDK.client.project.delete({ projectID: project.id! })
+                  closeProject(project.worktree)
+                  showToast({
+                    variant: "success",
+                    icon: "circle-check",
+                    title: language.t("toast.project.deleted.title"),
+                    description: language.t("toast.project.deleted.description", { name }),
+                  })
+                } catch (err) {
+                  showToast({
+                    variant: "error",
+                    title: language.t("dialog.project.delete.failed.title"),
+                    description: err instanceof Error ? err.message : String(err),
+                  })
+                }
+                dialog.close()
+              }}
+            >
+              {language.t("dialog.project.delete.button")}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+    ))
+  }
+
   const projectSidebarCtx: ProjectSidebarContext = {
     currentDir,
     sidebarOpened: () => layout.sidebar.opened(),
@@ -1666,6 +1709,7 @@ export default function Layout(props: ParentProps) {
     navigateToProject,
     openSidebar: () => layout.sidebar.open(),
     closeProject,
+    deleteProject,
     showEditProjectDialog,
     toggleProjectWorkspaces,
     workspacesEnabled: (project) => project.vcs === "git" && layout.sidebar.workspaces(project.worktree)(),

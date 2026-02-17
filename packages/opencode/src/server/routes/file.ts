@@ -344,12 +344,11 @@ export const FileRoutes = lazy(() =>
           for (const file of files) {
             if (typeof file === "string") continue
             if (!(file instanceof globalThis.File)) continue
-            const dest = targetDir
-              ? targetDir + "/" + file.name
-              : key === "file" || key === "file[]"
-                ? file.name
-                : key
+            const dest = targetDir ? targetDir + "/" + file.name : key === "file" || key === "file[]" ? file.name : key
             const buffer = await file.arrayBuffer()
+            if (buffer.byteLength === 0) {
+              throw new Error("Cannot upload empty file: " + file.name)
+            }
             await File.upload(dest, buffer)
             results.push({ path: dest, size: buffer.byteLength })
           }

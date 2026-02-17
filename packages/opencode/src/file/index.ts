@@ -92,8 +92,8 @@ export namespace File {
     "ogx",
     "flac",
     "aac",
-    "wma",
     "m4a",
+    "wma",
     "weba",
     "mp4",
     "avi",
@@ -542,10 +542,13 @@ export namespace File {
     })
   }
 
+  const UPLOAD_DIR = "/workspace/uploads"
+
   export async function upload(file: string, data: ArrayBuffer | Uint8Array | Blob | string) {
     using _ = log.time("upload", { file })
-    const full = path.join(Instance.directory, file)
-    if (!Instance.containsPath(full)) {
+    const isAbsolute = path.isAbsolute(file) && file.startsWith(UPLOAD_DIR)
+    const full = isAbsolute ? file : path.join(Instance.directory, file)
+    if (!isAbsolute && !Instance.containsPath(full)) {
       throw new Error("Access denied: path escapes project directory")
     }
     await fs.promises.mkdir(path.dirname(full), { recursive: true })

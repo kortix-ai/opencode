@@ -205,7 +205,6 @@ describe("Project.scan", () => {
   test("should discover git repos in a directory", async () => {
     await using tmp = await tmpdir()
 
-    // Create two git repos inside the base directory
     const repo1 = path.join(tmp.path, "repo1")
     const repo2 = path.join(tmp.path, "repo2")
     await fs.mkdir(repo1, { recursive: true })
@@ -227,7 +226,6 @@ describe("Project.scan", () => {
   test("should skip node_modules directories", async () => {
     await using tmp = await tmpdir()
 
-    // Create a normal repo and one inside node_modules
     const repo = path.join(tmp.path, "real-repo")
     const nmRepo = path.join(tmp.path, "node_modules", "some-pkg")
     await fs.mkdir(repo, { recursive: true })
@@ -241,7 +239,7 @@ describe("Project.scan", () => {
     const projects = await Project.scan([tmp.path])
 
     expect(projects.length).toBe(1)
-    expect(projects[0].worktree).toBe(repo)
+    expect(projects[0]!.worktree).toBe(repo)
   })
 
   test("should skip repos without commits", async () => {
@@ -258,9 +256,8 @@ describe("Project.scan", () => {
 
     const projects = await Project.scan([tmp.path])
 
-    // Only the committed repo should appear (empty returns "global" which is filtered)
     expect(projects.length).toBe(1)
-    expect(projects[0].worktree).toBe(committed)
+    expect(projects[0]!.worktree).toBe(committed)
   })
 
   test("should return empty for directory with no git repos", async () => {
@@ -277,7 +274,6 @@ describe("Project.scan", () => {
   test("should find nested git repos", async () => {
     await using tmp = await tmpdir()
 
-    // Create a nested structure: parent/child/grandchild
     const parent = path.join(tmp.path, "org", "project")
     await fs.mkdir(parent, { recursive: true })
 
@@ -287,7 +283,78 @@ describe("Project.scan", () => {
     const projects = await Project.scan([tmp.path])
 
     expect(projects.length).toBe(1)
-    expect(projects[0].worktree).toBe(parent)
+    expect(projects[0]!.worktree).toBe(parent)
+  })
+})
+
+describe("Project.get", () => {
+  test("should return a project by ID", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { project } = await Project.fromDirectory(tmp.path)
+
+    const result = Project.get(project.id)
+
+    expect(result).toBeDefined()
+    expect(result!.id).toBe(project.id)
+    expect(result!.worktree).toBe(project.worktree)
+  })
+
+  test("should return undefined for non-existent project", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const result = Project.get("nonexistent-id-12345")
+    expect(result).toBeUndefined()
+  })
+})
+
+describe("Project.create", () => {
+  test("should create a project from a directory with git", async () => {
+    await using tmp = await tmpdir({ git: true })
+
+    const result = await Project.create({ directory: tmp.path })
+
+    expect(result).toBeDefined()
+    expect(result.id).not.toBe("global")
+    expect(result.worktree).toBe(tmp.path)
+    expect(result.vcs).toBe("git")
+
+    // Verify it was persisted
+    const stored = Project.get(result.id)
+    expect(stored).toBeDefined()
+    expect(stored!.id).toBe(result.id)
+  })
+
+  test("should be idempotent for the same directory", async () => {
+    await using tmp = await tmpdir({ git: true })
+
+    const first = await Project.create({ directory: tmp.path })
+    const second = await Project.create({ directory: tmp.path })
+
+    expect(first.id).toBe(second.id)
+  })
+})
+
+describe("Project.remove", () => {
+  test("should remove a project and its database entry", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { project } = await Project.fromDirectory(tmp.path)
+
+    // Verify project exists
+    const stored = Project.get(project.id)
+    expect(stored).toBeDefined()
+    expect(stored!.id).toBe(project.id)
+
+    // Remove project
+    const removed = await Project.remove(project.id)
+    expect(removed.id).toBe(project.id)
+
+    // Verify project is gone
+    const after = Project.get(project.id)
+    expect(after).toBeUndefined()
+  })
+
+  test("should throw for non-existent project", async () => {
+    await using tmp = await tmpdir({ git: true })
+    await expect(Project.remove("nonexistent-id-12345")).rejects.toThrow()
   })
 })
 

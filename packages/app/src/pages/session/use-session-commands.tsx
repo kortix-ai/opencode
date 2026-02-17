@@ -175,6 +175,17 @@ export const useSessionCommands = (args: SessionCommandContext) => {
       onSelect: () => layout.fileTree.toggle(),
     }),
     viewCommand({
+      id: "project.settings",
+      title: language.t("command.project.settings"),
+      onSelect: () => {
+        tabs().open("project")
+        if (!view().reviewPanel.opened()) view().reviewPanel.open()
+        if (layout.fileTree.opened() && layout.fileTree.tab() === "changes") {
+          layout.fileTree.setTab("all")
+        }
+      },
+    }),
+    viewCommand({
       id: "input.focus",
       title: language.t("command.input.focus"),
       keybind: "ctrl+l",

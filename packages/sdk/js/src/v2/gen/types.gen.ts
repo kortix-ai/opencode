@@ -47,6 +47,11 @@ export type EventProjectUpdated = {
   properties: Project
 }
 
+export type EventProjectRemoved = {
+  type: "project.removed"
+  properties: Project
+}
+
 export type EventServerInstanceDisposed = {
   type: "server.instance.disposed"
   properties: {
@@ -945,6 +950,7 @@ export type Event =
   | EventInstallationUpdated
   | EventInstallationUpdateAvailable
   | EventProjectUpdated
+  | EventProjectRemoved
   | EventServerInstanceDisposed
   | EventServerConnected
   | EventGlobalDisposed
@@ -2231,6 +2237,25 @@ export type Agent = {
   steps?: number
 }
 
+export type AgentPatch = {
+  description?: string
+  mode?: "subagent" | "primary" | "all"
+  hidden?: boolean
+  topP?: number
+  temperature?: number
+  color?: string
+  model?: {
+    modelID: string
+    providerID: string
+  }
+  variant?: string
+  prompt?: string
+  steps?: number
+  options?: {
+    [key: string]: unknown
+  }
+}
+
 export type LspStatus = {
   id: string
   name: string
@@ -2408,6 +2433,35 @@ export type ProjectListResponses = {
 
 export type ProjectListResponse = ProjectListResponses[keyof ProjectListResponses]
 
+export type ProjectCreateData = {
+  body?: {
+    directory: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/project"
+}
+
+export type ProjectCreateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProjectCreateError = ProjectCreateErrors[keyof ProjectCreateErrors]
+
+export type ProjectCreateResponses = {
+  /**
+   * Created or existing project
+   */
+  200: Project
+}
+
+export type ProjectCreateResponse = ProjectCreateResponses[keyof ProjectCreateResponses]
+
 export type ProjectCurrentData = {
   body?: never
   path?: never
@@ -2425,6 +2479,64 @@ export type ProjectCurrentResponses = {
 }
 
 export type ProjectCurrentResponse = ProjectCurrentResponses[keyof ProjectCurrentResponses]
+
+export type ProjectDeleteData = {
+  body?: never
+  path: {
+    projectID: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/project/{projectID}"
+}
+
+export type ProjectDeleteErrors = {
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectDeleteError = ProjectDeleteErrors[keyof ProjectDeleteErrors]
+
+export type ProjectDeleteResponses = {
+  /**
+   * Successfully deleted project
+   */
+  200: boolean
+}
+
+export type ProjectDeleteResponse = ProjectDeleteResponses[keyof ProjectDeleteResponses]
+
+export type ProjectGetData = {
+  body?: never
+  path: {
+    projectID: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/project/{projectID}"
+}
+
+export type ProjectGetErrors = {
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectGetError = ProjectGetErrors[keyof ProjectGetErrors]
+
+export type ProjectGetResponses = {
+  /**
+   * Project information
+   */
+  200: Project
+}
+
+export type ProjectGetResponse = ProjectGetResponses[keyof ProjectGetResponses]
 
 export type ProjectUpdateData = {
   body?: {
@@ -4424,11 +4536,11 @@ export type FileRenameResponse = FileRenameResponses[keyof FileRenameResponses]
 export type FileUploadData = {
   body: {
     /**
-     * Optional target directory
+     * Optional target directory for uploaded files
      */
     path?: string
     /**
-     * File to upload
+     * File to upload (use relative path as field name, or 'file' with a path field)
      */
     file?: Blob | File
   }
@@ -5121,6 +5233,35 @@ export type AppAgentsResponses = {
 }
 
 export type AppAgentsResponse = AppAgentsResponses[keyof AppAgentsResponses]
+
+export type AgentUpdateData = {
+  body?: AgentPatch
+  path: {
+    name: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/agent/{name}"
+}
+
+export type AgentUpdateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type AgentUpdateError = AgentUpdateErrors[keyof AgentUpdateErrors]
+
+export type AgentUpdateResponses = {
+  /**
+   * Updated agent
+   */
+  200: Agent
+}
+
+export type AgentUpdateResponse = AgentUpdateResponses[keyof AgentUpdateResponses]
 
 export type AppSkillsData = {
   body?: never

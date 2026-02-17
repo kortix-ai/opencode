@@ -62,6 +62,7 @@ export type State = {
     [name: string]: McpStatus
   }
   lsp: LspStatus[]
+  skill: Array<{ name: string; description: string; location: string; content: string }>
   vcs: VcsInfo | undefined
   limit: number
   message: {

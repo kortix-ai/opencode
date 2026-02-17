@@ -10,6 +10,9 @@ import {
 } from "./client/index.js"
 import type {
   AgentPartInput,
+  AgentPatch,
+  AgentUpdateErrors,
+  AgentUpdateResponses,
   AppAgentsResponses,
   AppLogErrors,
   AppLogResponses,
@@ -84,7 +87,13 @@ import type {
   PermissionRespondErrors,
   PermissionRespondResponses,
   PermissionRuleset,
+  ProjectCreateErrors,
+  ProjectCreateResponses,
   ProjectCurrentResponses,
+  ProjectDeleteErrors,
+  ProjectDeleteResponses,
+  ProjectGetErrors,
+  ProjectGetResponses,
   ProjectListResponses,
   ProjectUpdateErrors,
   ProjectUpdateResponses,
@@ -391,6 +400,49 @@ export class Project extends HeyApiClient {
   }
 
   /**
+   * Create project
+   *
+   * Create or register a project from a directory path. If the project already exists, returns the existing project.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters?: {
+      query_directory?: string
+      body_directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            {
+              in: "query",
+              key: "query_directory",
+              map: "directory",
+            },
+            {
+              in: "body",
+              key: "body_directory",
+              map: "directory",
+            },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<ProjectCreateResponses, ProjectCreateErrors, ThrowOnError>({
+      url: "/project",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
    * Get current project
    *
    * Retrieve the currently active project that OpenCode is working with.
@@ -404,6 +456,66 @@ export class Project extends HeyApiClient {
     const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
     return (options?.client ?? this.client).get<ProjectCurrentResponses, unknown, ThrowOnError>({
       url: "/project/current",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Delete project
+   *
+   * Delete a project and cascade-remove all its sessions, messages, and parts.
+   */
+  public delete<ThrowOnError extends boolean = false>(
+    parameters: {
+      projectID: string
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "projectID" },
+            { in: "query", key: "directory" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<ProjectDeleteResponses, ProjectDeleteErrors, ThrowOnError>({
+      url: "/project/{projectID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get project
+   *
+   * Retrieve a specific project by its ID.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      projectID: string
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "projectID" },
+            { in: "query", key: "directory" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<ProjectGetResponses, ProjectGetErrors, ThrowOnError>({
+      url: "/project/{projectID}",
       ...options,
       ...params,
     })
@@ -2468,7 +2580,7 @@ export class File extends HeyApiClient {
   /**
    * Upload files
    *
-   * Upload one or more files via multipart/form-data.
+   * Upload one or more files via multipart/form-data. Each file field should use the relative path as the field name (e.g., 'src/image.png'). Alternatively, include a 'path' field to specify a target directory — uploaded files will be placed there using their original filenames.
    */
   public upload<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -3279,6 +3391,45 @@ export class App extends HeyApiClient {
   }
 }
 
+export class Agent extends HeyApiClient {
+  /**
+   * Update agent
+   *
+   * Update an agent's configuration by name.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      agentPatch?: AgentPatch
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { key: "agentPatch", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<AgentUpdateResponses, AgentUpdateErrors, ThrowOnError>({
+      url: "/agent/{name}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Lsp extends HeyApiClient {
   /**
    * Get LSP status
@@ -3458,6 +3609,11 @@ export class OpencodeClient extends HeyApiClient {
   private _app?: App
   get app(): App {
     return (this._app ??= new App({ client: this.client }))
+  }
+
+  private _agent?: Agent
+  get agent(): Agent {
+    return (this._agent ??= new Agent({ client: this.client }))
   }
 
   private _lsp?: Lsp

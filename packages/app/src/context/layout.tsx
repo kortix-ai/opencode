@@ -769,8 +769,43 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           },
           async open(tab: string) {
             const session = key()
-            const next = nextSessionTabsForOpen(store.sessionTabs[session], tab)
-            setStore("sessionTabs", session, next)
+            const current = store.sessionTabs[session] ?? { all: [] }
+
+            if (tab === "review") {
+              if (!store.sessionTabs[session]) {
+                setStore("sessionTabs", session, { all: current.all.filter((x) => x !== "review"), active: tab })
+                return
+              }
+              setStore("sessionTabs", session, "active", tab)
+              return
+            }
+
+            if (tab === "context" || tab === "project") {
+              const all = [tab, ...current.all.filter((x) => x !== tab)]
+              if (!store.sessionTabs[session]) {
+                setStore("sessionTabs", session, { all, active: tab })
+                return
+              }
+              setStore("sessionTabs", session, "all", all)
+              setStore("sessionTabs", session, "active", tab)
+              return
+            }
+
+            if (!current.all.includes(tab)) {
+              if (!store.sessionTabs[session]) {
+                setStore("sessionTabs", session, { all: [tab], active: tab })
+                return
+              }
+              setStore("sessionTabs", session, "all", [...current.all, tab])
+              setStore("sessionTabs", session, "active", tab)
+              return
+            }
+
+            if (!store.sessionTabs[session]) {
+              setStore("sessionTabs", session, { all: current.all, active: tab })
+              return
+            }
+            setStore("sessionTabs", session, "active", tab)
           },
           close(tab: string) {
             const session = key()

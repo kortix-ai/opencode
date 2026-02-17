@@ -552,7 +552,20 @@ export function SessionHeader() {
                   </Show>
                 </div>
               </Show>
-              <div class="flex items-center gap-3 ml-2 shrink-0">
+              <div class="hidden md:flex items-center gap-3 ml-2 shrink-0">
+                <Tooltip value={language.t("command.project.settings")} placement="bottom">
+                    <Button
+                    variant="ghost"
+                    class="size-6 p-0"
+                    onClick={() => command.trigger("project.settings")}
+                    aria-label={language.t("command.project.settings")}
+                    data-action="project-settings"
+                  >
+                    <div class="relative flex items-center justify-center size-4">
+                      <Icon size="small" name="sliders" class="text-icon-weak" />
+                    </div>
+                  </Button>
+                </Tooltip>
                 <TooltipKeybind
                   title={language.t("command.terminal.toggle")}
                   keybind={command.keybind("terminal.toggle")}

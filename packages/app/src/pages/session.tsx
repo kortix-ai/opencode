@@ -869,10 +869,11 @@ export default function Page() {
   }
 
   const contextOpen = createMemo(() => tabs().active() === "context" || tabs().all().includes("context"))
+  const projectOpen = createMemo(() => tabs().active() === "project" || tabs().all().includes("project"))
   const openedTabs = createMemo(() =>
     tabs()
       .all()
-      .filter((tab) => tab !== "context" && tab !== "review"),
+      .filter((tab) => tab !== "context" && tab !== "review" && tab !== "project"),
   )
 
   const mobileChanges = createMemo(() => !isDesktop() && store.mobileTab === "changes")
@@ -1138,12 +1139,14 @@ export default function Page() {
   const activeTab = createMemo(() => {
     const active = tabs().active()
     if (active === "context") return "context"
+    if (active === "project") return "project"
     if (active === "review" && reviewTab()) return "review"
     if (active && file.pathFromTab(active)) return normalizeTab(active)
 
     const first = openedTabs()[0]
     if (first) return first
     if (contextOpen()) return "context"
+    if (projectOpen()) return "project"
     if (reviewTab() && hasReview()) return "review"
     return "empty"
   })
@@ -1700,6 +1703,7 @@ export default function Page() {
           reviewCount={reviewCount()}
           reviewTab={reviewTab()}
           contextOpen={contextOpen}
+          projectOpen={projectOpen}
           openedTabs={openedTabs}
           activeTab={activeTab}
           activeFileTab={activeFileTab}

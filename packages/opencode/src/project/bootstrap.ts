@@ -1,3 +1,4 @@
+import fs from "fs"
 import { Plugin } from "../plugin"
 import { Format } from "../format"
 import { LSP } from "../lsp"
@@ -13,8 +14,11 @@ import { ShareNext } from "@/share/share-next"
 import { Snapshot } from "../snapshot"
 import { Truncate } from "../tool/truncation"
 
+const UPLOAD_DIR = "/workspace/uploads"
+
 export async function InstanceBootstrap() {
   Log.Default.info("bootstrapping", { directory: Instance.directory })
+  await fs.promises.mkdir(UPLOAD_DIR, { recursive: true }).catch(() => {})
   await Plugin.init()
   ShareNext.init()
   Format.init()

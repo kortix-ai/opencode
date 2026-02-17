@@ -27,6 +27,7 @@ export type ProjectSidebarContext = {
   navigateToProject: (directory: string) => void
   openSidebar: () => void
   closeProject: (directory: string) => void
+  deleteProject?: (project: LocalProject) => void
   showEditProjectDialog: (project: LocalProject) => void
   toggleProjectWorkspaces: (project: LocalProject) => void
   workspacesEnabled: (project: LocalProject) => boolean
@@ -319,28 +320,83 @@ export const SortableProject = (props: {
     const [data] = globalSync.child(directory, { bootstrap: false })
     return childMapByParent(data.session)
   }
-  const tile = () => (
-    <ProjectTile
-      project={props.project}
-      mobile={props.mobile}
-      nav={props.ctx.nav}
-      sidebarHovering={props.ctx.sidebarHovering}
-      selected={selected}
-      active={active}
-      overlay={overlay}
-      dirs={dirs}
-      onProjectMouseEnter={props.ctx.onProjectMouseEnter}
-      onProjectMouseLeave={props.ctx.onProjectMouseLeave}
-      onProjectFocus={props.ctx.onProjectFocus}
-      navigateToProject={props.ctx.navigateToProject}
-      showEditProjectDialog={props.ctx.showEditProjectDialog}
-      toggleProjectWorkspaces={props.ctx.toggleProjectWorkspaces}
-      workspacesEnabled={props.ctx.workspacesEnabled}
-      closeProject={props.ctx.closeProject}
-      setMenu={setMenu}
-      setOpen={setOpen}
-      language={language}
-    />
+
+  const Trigger = () => (
+    <ContextMenu
+      modal={!props.ctx.sidebarHovering()}
+      onOpenChange={(value) => {
+        setMenu(value)
+        if (value) setOpen(false)
+      }}
+    >
+      <ContextMenu.Trigger
+        as="button"
+        type="button"
+        aria-label={displayName(props.project)}
+        data-action="project-switch"
+        data-project={base64Encode(props.project.worktree)}
+        classList={{
+          "flex items-center justify-center size-10 p-1 rounded-lg overflow-hidden transition-colors cursor-default": true,
+          "bg-transparent border-2 border-icon-strong-base hover:bg-surface-base-hover": selected(),
+          "bg-transparent border border-transparent hover:bg-surface-base-hover hover:border-border-weak-base":
+            !selected() && !active(),
+          "bg-surface-base-hover border border-border-weak-base": !selected() && active(),
+        }}
+        onMouseEnter={(event: MouseEvent) => {
+          if (!overlay()) return
+          props.ctx.onProjectMouseEnter(props.project.worktree, event)
+        }}
+        onMouseLeave={() => {
+          if (!overlay()) return
+          props.ctx.onProjectMouseLeave(props.project.worktree)
+        }}
+        onFocus={() => {
+          if (!overlay()) return
+          props.ctx.onProjectFocus(props.project.worktree)
+        }}
+        onClick={() => props.ctx.navigateToProject(props.project.worktree)}
+        onBlur={() => setOpen(false)}
+      >
+        <ProjectIcon project={props.project} notify />
+      </ContextMenu.Trigger>
+      <ContextMenu.Portal mount={!props.mobile ? props.ctx.nav() : undefined}>
+        <ContextMenu.Content>
+          <ContextMenu.Item onSelect={() => props.ctx.showEditProjectDialog(props.project)}>
+            <ContextMenu.ItemLabel>{language.t("common.edit")}</ContextMenu.ItemLabel>
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            data-action="project-workspaces-toggle"
+            data-project={base64Encode(props.project.worktree)}
+            disabled={props.project.vcs !== "git" && !props.ctx.workspacesEnabled(props.project)}
+            onSelect={() => props.ctx.toggleProjectWorkspaces(props.project)}
+          >
+            <ContextMenu.ItemLabel>
+              {props.ctx.workspacesEnabled(props.project)
+                ? language.t("sidebar.workspaces.disable")
+                : language.t("sidebar.workspaces.enable")}
+            </ContextMenu.ItemLabel>
+          </ContextMenu.Item>
+          <ContextMenu.Separator />
+          <ContextMenu.Item
+            data-action="project-close-menu"
+            data-project={base64Encode(props.project.worktree)}
+            onSelect={() => props.ctx.closeProject(props.project.worktree)}
+          >
+            <ContextMenu.ItemLabel>{language.t("common.close")}</ContextMenu.ItemLabel>
+          </ContextMenu.Item>
+          <Show when={props.project.id && props.project.id !== "global"}>
+            <ContextMenu.Item
+              data-action="project-delete-menu"
+              data-project={base64Encode(props.project.worktree)}
+              onSelect={() => props.ctx.deleteProject?.(props.project)}
+              class="text-red-500"
+            >
+              <ContextMenu.ItemLabel>{language.t("common.delete")}</ContextMenu.ItemLabel>
+            </ContextMenu.Item>
+          </Show>
+        </ContextMenu.Content>
+      </ContextMenu.Portal>
+    </ContextMenu>
   )
 
   return (

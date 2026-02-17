@@ -49,6 +49,7 @@ export namespace Project {
 
   export const Event = {
     Updated: BusEvent.define("project.updated", Info),
+    Removed: BusEvent.define("project.removed", Info),
   }
 
   type Row = typeof ProjectTable.$inferSelect
@@ -73,6 +74,28 @@ export namespace Project {
       commands: row.commands ?? undefined,
     }
   }
+
+  export const create = fn(z.object({ directory: z.string() }), async (input) => {
+    const result = await fromDirectory(input.directory)
+    return result.project
+  })
+
+  export const remove = fn(z.string(), async (projectID) => {
+    const row = Database.use((db) => db.select().from(ProjectTable).where(eq(ProjectTable.id, projectID)).get())
+    if (!row) throw new Error(`Project not found: ${projectID}`)
+    const project = fromRow(row)
+    // Cascade: delete all sessions
+    Database.use((db) => db.delete(SessionTable).where(eq(SessionTable.project_id, projectID)).run())
+    Database.use((db) => db.delete(ProjectTable).where(eq(ProjectTable.id, projectID)).run())
+    GlobalBus.emit("event", {
+      payload: {
+        type: Event.Removed.type,
+        properties: project,
+      },
+    })
+    return project
+  })
+
 
   export async function fromDirectory(directory: string) {
     log.info("fromDirectory", { directory })

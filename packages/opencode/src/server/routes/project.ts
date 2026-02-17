@@ -31,6 +31,32 @@ export const ProjectRoutes = lazy(() =>
         return c.json(projects)
       },
     )
+    .post(
+      "/",
+      describeRoute({
+        summary: "Create project",
+        description:
+          "Create or register a project from a directory path. If the project already exists, returns the existing project.",
+        operationId: "project.create",
+        responses: {
+          200: {
+            description: "Created or existing project",
+            content: {
+              "application/json": {
+                schema: resolver(Project.Info),
+              },
+            },
+          },
+          ...errors(400),
+        },
+      }),
+      validator("json", Project.create.schema),
+      async (c) => {
+        const body = c.req.valid("json")
+        const project = await Project.create(body)
+        return c.json(project)
+      },
+    )
     .get(
       "/current",
       describeRoute({
@@ -50,6 +76,31 @@ export const ProjectRoutes = lazy(() =>
       }),
       async (c) => {
         return c.json(Instance.project)
+      },
+    )
+    .get(
+      "/:projectID",
+      describeRoute({
+        summary: "Get project",
+        description: "Retrieve a specific project by its ID.",
+        operationId: "project.get",
+        responses: {
+          200: {
+            description: "Project information",
+            content: {
+              "application/json": {
+                schema: resolver(Project.Info),
+              },
+            },
+          },
+          ...errors(404),
+        },
+      }),
+      validator("param", z.object({ projectID: z.string() })),
+      async (c) => {
+        const projectID = c.req.valid("param").projectID
+        const project = await Project.get(projectID)
+        return c.json(project)
       },
     )
     .patch(
@@ -77,6 +128,31 @@ export const ProjectRoutes = lazy(() =>
         const body = c.req.valid("json")
         const project = await Project.update({ ...body, projectID })
         return c.json(project)
+      },
+    )
+    .delete(
+      "/:projectID",
+      describeRoute({
+        summary: "Delete project",
+        description: "Delete a project and cascade-remove all its sessions, messages, and parts.",
+        operationId: "project.delete",
+        responses: {
+          200: {
+            description: "Successfully deleted project",
+            content: {
+              "application/json": {
+                schema: resolver(z.boolean()),
+              },
+            },
+          },
+          ...errors(404),
+        },
+      }),
+      validator("param", z.object({ projectID: z.string() })),
+      async (c) => {
+        const projectID = c.req.valid("param").projectID
+        await Project.remove(projectID)
+        return c.json(true)
       },
     ),
 )
