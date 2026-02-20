@@ -10,8 +10,11 @@ export const settingsNotificationsAgentSelector = '[data-action="settings-notifi
 export const settingsNotificationsPermissionsSelector = '[data-action="settings-notifications-permissions"]'
 export const settingsNotificationsErrorsSelector = '[data-action="settings-notifications-errors"]'
 export const settingsSoundsAgentSelector = '[data-action="settings-sounds-agent"]'
+export const settingsSoundsAgentEnabledSelector = '[data-action="settings-sounds-agent-enabled"]'
 export const settingsSoundsPermissionsSelector = '[data-action="settings-sounds-permissions"]'
+export const settingsSoundsPermissionsEnabledSelector = '[data-action="settings-sounds-permissions-enabled"]'
 export const settingsSoundsErrorsSelector = '[data-action="settings-sounds-errors"]'
+export const settingsSoundsErrorsEnabledSelector = '[data-action="settings-sounds-errors-enabled"]'
 export const settingsUpdatesStartupSelector = '[data-action="settings-updates-startup"]'
 export const settingsReleaseNotesSelector = '[data-action="settings-release-notes"]'
 
@@ -26,6 +29,9 @@ export const projectMenuTriggerSelector = (slug: string) =>
   `${sidebarNavSelector} [data-action="project-menu"][data-project="${slug}"]`
 
 export const projectCloseMenuSelector = (slug: string) => `[data-action="project-close-menu"][data-project="${slug}"]`
+
+export const projectClearNotificationsSelector = (slug: string) =>
+  `[data-action="project-clear-notifications"][data-project="${slug}"]`
 
 export const projectWorkspacesToggleSelector = (slug: string) =>
   `[data-action="project-workspaces-toggle"][data-project="${slug}"]`
@@ -58,3 +64,30 @@ export const listItemKeyStartsWithSelector = (prefix: string) => `${listItemSele
 export const listItemKeySelector = (key: string) => `${listItemSelector}[data-key="${key}"]`
 
 export const keybindButtonSelector = (id: string) => `[data-keybind-id="${id}"]`
+
+// Project tab selectors
+export const projectTabSelector = '[data-component="project-tab"]'
+export const projectSectionInfoSelector = '[data-component="project-section-info"]'
+export const projectNameSelector = '[data-component="project-name"]'
+export const projectWorktreeSelector = '[data-component="project-worktree"]'
+export const projectEditSelector = '[data-action="project-edit"]'
+export const projectDeleteSelector = '[data-action="project-delete"]'
+export const projectSettingsSelector = '[data-action="project-settings"]'
+export const projectSectionAgentsSelector = '[data-component="project-section-agents"]'
+export const projectNoAgentsSelector = '[data-component="project-no-agents"]'
+export const agentCardSelector = '[data-component="agent-card"]'
+export const agentCardByNameSelector = (name: string) => `[data-component="agent-card"][data-agent="${name}"]`
+export const projectSectionSkillsSelector = '[data-component="project-section-skills"]'
+export const projectNoSkillsSelector = '[data-component="project-no-skills"]'
+export const skillCardSelector = '[data-component="skill-card"]'
+export const projectSectionMcpSelector = '[data-component="project-section-mcp"]'
+export const projectNoMcpSelector = '[data-component="project-no-mcp"]'
+export const mcpCardSelector = '[data-component="mcp-card"]'
+export const mcpCardByNameSelector = (name: string) => `[data-component="mcp-card"][data-mcp="${name}"]`
+export const projectSectionInstructionsSelector = '[data-component="project-section-instructions"]'
+export const projectNoInstructionsSelector = '[data-component="project-no-instructions"]'
+export const instructionCardSelector = '[data-component="instruction-card"]'
+export const projectSectionCommandsSelector = '[data-component="project-section-commands"]'
+export const projectNoCommandsSelector = '[data-component="project-no-commands"]'
+export const commandCardSelector = '[data-component="command-card"]'
+export const commandCardByNameSelector = (name: string) => `[data-component="command-card"][data-command="${name}"]`

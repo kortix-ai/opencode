@@ -77,6 +77,7 @@ const baseState = (input: Partial<State> = {}) =>
     question: {},
     mcp: {},
     lsp: [],
+    skill: [],
     vcs: undefined,
     limit: 10,
     message: {},
@@ -101,6 +102,38 @@ describe("applyGlobalEvent", () => {
 
     expect(project.map((x) => x.id)).toEqual(["a", "b", "c"])
     expect(refreshCount).toBe(0)
+  })
+
+  test("removes project on project.removed", () => {
+    const project = [{ id: "a" }, { id: "b" }, { id: "c" }] as Project[]
+    let refreshCount = 0
+    applyGlobalEvent({
+      event: { type: "project.removed", properties: { id: "b" } },
+      project,
+      refresh: () => {
+        refreshCount += 1
+      },
+      setGlobalProject(next) {
+        if (typeof next === "function") next(project)
+      },
+    })
+
+    expect(project.map((x) => x.id)).toEqual(["a", "c"])
+    expect(refreshCount).toBe(0)
+  })
+
+  test("ignores project.removed for unknown project", () => {
+    const project = [{ id: "a" }, { id: "c" }] as Project[]
+    applyGlobalEvent({
+      event: { type: "project.removed", properties: { id: "z" } },
+      project,
+      refresh: () => {},
+      setGlobalProject(next) {
+        if (typeof next === "function") next(project)
+      },
+    })
+
+    expect(project.map((x) => x.id)).toEqual(["a", "c"])
   })
 
   test("handles global.disposed by triggering refresh", () => {

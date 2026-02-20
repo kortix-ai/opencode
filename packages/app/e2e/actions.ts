@@ -10,6 +10,8 @@ import {
   dropdownMenuContentSelector,
   projectMenuTriggerSelector,
   projectWorkspacesToggleSelector,
+  projectSettingsSelector,
+  projectTabSelector,
   titlebarRightSelector,
   popoverBodySelector,
   listItemSelector,
@@ -418,4 +420,14 @@ export async function openWorkspaceMenu(page: Page, workspaceSlug: string) {
   const menu = page.locator(dropdownMenuContentSelector).first()
   await expect(menu).toBeVisible()
   return menu
+}
+
+export async function openProjectSettings(page: Page) {
+  const button = page.locator(projectSettingsSelector).first()
+  await expect(button).toBeVisible()
+  await button.click()
+
+  const tab = page.locator(projectTabSelector).first()
+  await expect(tab).toBeVisible()
+  return tab
 }

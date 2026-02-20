@@ -290,6 +290,63 @@
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.project.list({\n  ...\n})"
           }
         ]
+      },
+      "post": {
+        "operationId": "project.create",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Create project",
+        "description": "Create or register a project from a directory path. If the project already exists, returns the existing project.",
+        "responses": {
+          "200": {
+            "description": "Created or existing project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "directory": {
+                    "type": "string"
+                  }
+                },
+                "required": ["directory"]
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.project.create({\n  ...\n})"
+          }
+        ]
       }
     },
     "/project/current": {
@@ -327,6 +384,56 @@
       }
     },
     "/project/{projectID}": {
+      "get": {
+        "operationId": "project.get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projectID",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get project",
+        "description": "Retrieve a specific project by its ID.",
+        "responses": {
+          "200": {
+            "description": "Project information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.project.get({\n  ...\n})"
+          }
+        ]
+      },
       "patch": {
         "operationId": "project.update",
         "parameters": [
@@ -421,6 +528,56 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.project.update({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "project.delete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projectID",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Delete project",
+        "description": "Delete a project and cascade-remove all its sessions, messages, and parts.",
+        "responses": {
+          "200": {
+            "description": "Successfully deleted project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.project.delete({\n  ...\n})"
           }
         ]
       }
@@ -4302,6 +4459,73 @@
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.file.list({\n  ...\n})"
           }
         ]
+      },
+      "delete": {
+        "operationId": "file.delete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Delete file",
+        "description": "Delete a file or directory recursively.",
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.file.delete({\n  ...\n})"
+          }
+        ]
       }
     },
     "/file/content": {
@@ -4379,6 +4603,214 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.file.status({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/file/mkdir": {
+      "post": {
+        "operationId": "file.mkdir",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Create directory",
+        "description": "Create a directory, including any missing parent directories.",
+        "responses": {
+          "200": {
+            "description": "Directory created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.file.mkdir({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/file/rename": {
+      "post": {
+        "operationId": "file.rename",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Rename file",
+        "description": "Rename or move a file or directory. Creates missing parent directories for the target path.",
+        "responses": {
+          "200": {
+            "description": "File renamed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": ["from", "to"]
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.file.rename({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/file/upload": {
+      "post": {
+        "operationId": "file.upload",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Upload files",
+        "description": "Upload one or more files via multipart/form-data. Each file field should use the relative path as the field name (e.g., 'src/image.png'). Alternatively, include a 'path' field to specify a target directory — uploaded files will be placed there using their original filenames.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Optional target directory for uploaded files"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File to upload (use relative path as field name, or 'file' with a path field)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "size": {
+                        "type": "number"
+                      }
+                    },
+                    "required": ["path", "size"]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.file.upload({\n  ...\n})"
           }
         ]
       }
@@ -5699,6 +6131,67 @@
         ]
       }
     },
+    "/agent/{name}": {
+      "patch": {
+        "operationId": "agent.update",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "directory",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Update agent",
+        "description": "Update an agent's configuration by name.",
+        "responses": {
+          "200": {
+            "description": "Updated agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentPatch"
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.agent.update({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/skill": {
       "get": {
         "operationId": "app.skills",
@@ -5969,6 +6462,19 @@
           "type": {
             "type": "string",
             "const": "project.updated"
+          },
+          "properties": {
+            "$ref": "#/components/schemas/Project"
+          }
+        },
+        "required": ["type", "properties"]
+      },
+      "Event.project.removed": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "project.removed"
           },
           "properties": {
             "$ref": "#/components/schemas/Project"
@@ -7338,12 +7844,40 @@
             "properties": {
               "part": {
                 "$ref": "#/components/schemas/Part"
+              }
+            },
+            "required": ["part"]
+          }
+        },
+        "required": ["type", "properties"]
+      },
+      "Event.message.part.delta": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "message.part.delta"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "messageID": {
+                "type": "string"
+              },
+              "partID": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
               },
               "delta": {
                 "type": "string"
               }
             },
-            "required": ["part"]
+            "required": ["sessionID", "messageID", "partID", "field", "delta"]
           }
         },
         "required": ["type", "properties"]
@@ -7757,13 +8291,9 @@
           "priority": {
             "description": "Priority level of the task: high, medium, low",
             "type": "string"
-          },
-          "id": {
-            "description": "Unique identifier for the todo item",
-            "type": "string"
           }
         },
-        "required": ["content", "status", "priority", "id"]
+        "required": ["content", "status", "priority"]
       },
       "Event.todo.updated": {
         "type": "object",
@@ -8408,6 +8938,9 @@
             "$ref": "#/components/schemas/Event.project.updated"
           },
           {
+            "$ref": "#/components/schemas/Event.project.removed"
+          },
+          {
             "$ref": "#/components/schemas/Event.server.instance.disposed"
           },
           {
@@ -8433,6 +8966,9 @@
           },
           {
             "$ref": "#/components/schemas/Event.message.part.updated"
+          },
+          {
+            "$ref": "#/components/schemas/Event.message.part.delta"
           },
           {
             "$ref": "#/components/schemas/Event.message.part.removed"
@@ -11025,6 +11561,60 @@
           }
         },
         "required": ["name", "mode", "permission", "options"]
+      },
+      "AgentPatch": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["subagent", "primary", "all"]
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "topP": {
+            "type": "number"
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "color": {
+            "type": "string"
+          },
+          "model": {
+            "type": "object",
+            "properties": {
+              "modelID": {
+                "type": "string"
+              },
+              "providerID": {
+                "type": "string"
+              }
+            },
+            "required": ["modelID", "providerID"]
+          },
+          "variant": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "options": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        }
       },
       "LSPStatus": {
         "type": "object",

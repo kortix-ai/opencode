@@ -25,6 +25,17 @@ export function applyGlobalEvent(input: {
     return
   }
 
+  if (input.event.type === "project.removed") {
+    const properties = input.event.properties as Project
+    const result = Binary.search(input.project, properties.id, (s) => s.id)
+    if (result.found) {
+      input.setGlobalProject((draft) => {
+        draft.splice(result.index, 1)
+      })
+    }
+    return
+  }
+
   if (input.event.type !== "project.updated") return
   const properties = input.event.properties as Project
   const result = Binary.search(input.project, properties.id, (s) => s.id)
@@ -231,8 +242,27 @@ export function applyDirectoryEvent(input: {
       }
       break
     }
+    case "message.part.delta": {
+      const props = event.properties as { messageID: string; partID: string; field: string; delta: string }
+      const parts = input.store.part[props.messageID]
+      if (!parts) break
+      const result = Binary.search(parts, props.partID, (p) => p.id)
+      if (!result.found) break
+      input.setStore(
+        "part",
+        props.messageID,
+        produce((draft) => {
+          const part = draft[result.index]
+          const field = props.field as keyof typeof part
+          const existing = part[field] as string | undefined
+          ;(part[field] as string) = (existing ?? "") + props.delta
+        }),
+      )
+      break
+    }
     case "vcs.branch.updated": {
       const props = event.properties as { branch: string }
+      if (input.store.vcs?.branch === props.branch) break
       const next = { branch: props.branch }
       input.setStore("vcs", next)
       if (input.vcsCache) input.vcsCache.setStore("value", next)

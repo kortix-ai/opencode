@@ -109,6 +109,7 @@ export const dict = {
   "dialog.model.empty": "No model results",
   "dialog.model.manage": "Manage models",
   "dialog.model.manage.description": "Customize which models appear in the model selector.",
+  "dialog.model.manage.provider.toggle": "Toggle all {{provider}} models",
 
   "dialog.model.unpaid.freeModels.title": "Free models provided by OpenCode",
   "dialog.model.unpaid.addMore.title": "Add more models from popular providers",
@@ -335,6 +336,35 @@ export const dict = {
   "dialog.project.edit.worktree.startup.description": "Runs after creating a new workspace (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "e.g. bun install",
 
+  "project.tab.section.info": "Project Info",
+  "project.tab.section.agents": "Agents",
+  "project.tab.section.skills": "Skills",
+  "project.tab.section.mcp": "MCP Servers",
+  "project.tab.section.instructions": "Instructions",
+  "project.tab.noAgents": "No agents configured",
+  "project.tab.noSkills": "No skills configured",
+  "project.tab.noMcp": "No MCP servers configured",
+  "project.tab.noInstructions": "No instructions configured",
+  "project.tab.agent.model": "Model",
+  "project.tab.agent.temperature": "Temperature",
+  "project.tab.agent.topP": "Top P",
+  "project.tab.section.commands": "Commands",
+  "project.tab.noCommands": "No commands configured",
+  "project.tab.mcp.tools": "{{count}} tools",
+  "project.tab.skill.location": "Location",
+  "project.tab.instructions.path": "Path",
+
+  "command.project.settings": "Project settings",
+
+  "dialog.project.delete.title": "Delete project",
+  "dialog.project.delete.confirm":
+    'Delete project "{{name}}"? This will permanently remove all sessions, messages, and data associated with this project.',
+  "dialog.project.delete.button": "Delete project",
+  "dialog.project.delete.failed.title": "Failed to delete project",
+
+  "toast.project.deleted.title": "Project deleted",
+  "toast.project.deleted.description": '"{{name}}" has been removed',
+
   "context.breakdown.title": "Context Breakdown",
   "context.breakdown.note": 'Approximate breakdown of input tokens. "Other" includes tool definitions and overhead.',
   "context.breakdown.system": "System",
@@ -484,6 +514,7 @@ export const dict = {
   "session.tab.session": "Session",
   "session.tab.review": "Review",
   "session.tab.context": "Context",
+  "session.tab.project": "Project",
   "session.panel.reviewAndFiles": "Review and files",
   "session.review.filesChanged": "{{count}} Files Changed",
   "session.review.change.one": "Change",
@@ -576,6 +607,7 @@ export const dict = {
   "sidebar.gettingStarted.line2": "Connect any provider to use models, inc. Claude, GPT, Gemini etc.",
   "sidebar.project.recentSessions": "Recent sessions",
   "sidebar.project.viewAllSessions": "View all sessions",
+  "sidebar.project.clearNotifications": "Clear notifications",
 
   "app.name.desktop": "OpenCode Desktop",
 
@@ -630,6 +662,7 @@ export const dict = {
   "font.option.robotoMono": "Roboto Mono",
   "font.option.sourceCodePro": "Source Code Pro",
   "font.option.ubuntuMono": "Ubuntu Mono",
+  "font.option.geistMono": "Geist Mono",
   "sound.option.alert01": "Alert 01",
   "sound.option.alert02": "Alert 02",
   "sound.option.alert03": "Alert 03",

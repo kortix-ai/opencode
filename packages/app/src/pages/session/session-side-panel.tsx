@@ -1,5 +1,6 @@
 import { For, Match, Show, Switch, createMemo, onCleanup, type JSX, type ValidComponent } from "solid-js"
 import { Tabs } from "@opencode-ai/ui/tabs"
+import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip, TooltipKeybind } from "@opencode-ai/ui/tooltip"
 import { ResizeHandle } from "@opencode-ai/ui/resize-handle"
@@ -7,6 +8,7 @@ import { Mark } from "@opencode-ai/ui/logo"
 import FileTree from "@/components/file-tree"
 import { SessionContextUsage } from "@/components/session-context-usage"
 import { SessionContextTab, SortableTab, FileVisual } from "@/components/session"
+import { ProjectTab } from "@/components/project-tab"
 import { DialogSelectFile } from "@/components/dialog-select-file"
 import { createFileTabListSync } from "@/pages/session/file-tab-scroll"
 import { FileTabContent } from "@/pages/session/file-tabs"
@@ -21,6 +23,14 @@ import { useFile, type SelectedLineRange } from "@/context/file"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { useSync } from "@/context/sync"
+import type { Message, UserMessage } from "@opencode-ai/sdk/v2/client"
+
+type SessionSidePanelViewModel = {
+  messages: () => Message[]
+  visibleUserMessages: () => UserMessage[]
+  view: () => ReturnType<ReturnType<typeof useLayout>["view"]>
+  info: () => ReturnType<ReturnType<typeof useSync>["session"]["get"]>
+}
 
 export function SessionSidePanel(props: {
   open: boolean
@@ -31,11 +41,11 @@ export function SessionSidePanel(props: {
   dialog: ReturnType<typeof useDialog>
   file: ReturnType<typeof useFile>
   comments: ReturnType<typeof useComments>
-  sync: ReturnType<typeof useSync>
   hasReview: boolean
   reviewCount: number
   reviewTab: boolean
   contextOpen: () => boolean
+  projectOpen: () => boolean
   openedTabs: () => string[]
   activeTab: () => string
   activeFileTab: () => string | undefined
@@ -43,10 +53,7 @@ export function SessionSidePanel(props: {
   openTab: (value: string) => void
   showAllFiles: () => void
   reviewPanel: () => JSX.Element
-  messages: () => unknown[]
-  visibleUserMessages: () => unknown[]
-  view: () => ReturnType<ReturnType<typeof useLayout>["view"]>
-  info: () => unknown
+  vm: SessionSidePanelViewModel
   handoffFiles: () => Record<string, SelectedLineRange | null> | undefined
   codeComponent: NonNullable<ValidComponent>
   addCommentToContext: (input: {
@@ -68,6 +75,8 @@ export function SessionSidePanel(props: {
   activeDiff?: string
   focusReviewDiff: (path: string) => void
 }) {
+  const openedTabs = createMemo(() => props.openedTabs())
+
   return (
     <Show when={props.open}>
       <aside
@@ -136,6 +145,29 @@ export function SessionSidePanel(props: {
                             </div>
                           </Tabs.Trigger>
                         </Show>
+                        <Show when={props.projectOpen()}>
+                          <Tabs.Trigger
+                            value="project"
+                            closeButton={
+                              <Tooltip value={props.language.t("common.closeTab")} placement="bottom">
+                                <IconButton
+                                  icon="close-small"
+                                  variant="ghost"
+                                  class="h-5 w-5"
+                                  onClick={() => props.tabs().close("project")}
+                                  aria-label={props.language.t("common.closeTab")}
+                                />
+                              </Tooltip>
+                            }
+                            hideCloseButton
+                            onMiddleClick={() => props.tabs().close("project")}
+                          >
+                            <div class="flex items-center gap-2">
+                              <Icon name="sliders" size="small" />
+                              <div>{props.language.t("session.tab.project")}</div>
+                            </div>
+                          </Tabs.Trigger>
+                        </Show>
                         <SortableProvider ids={props.openedTabs()}>
                           <For each={props.openedTabs()}>
                             {(tab) => <SortableTab tab={tab} onTabClose={props.tabs().close} />}
@@ -187,12 +219,20 @@ export function SessionSidePanel(props: {
                         <Show when={props.activeTab() === "context"}>
                           <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                             <SessionContextTab
-                              messages={props.messages as never}
-                              visibleUserMessages={props.visibleUserMessages as never}
-                              view={props.view as never}
-                              info={props.info as never}
+                              messages={props.vm.messages}
+                              visibleUserMessages={props.vm.visibleUserMessages}
+                              view={props.vm.view}
+                              info={props.vm.info}
                             />
                           </div>
+                        </Show>
+                      </Tabs.Content>
+                    </Show>
+
+                    <Show when={props.projectOpen()}>
+                      <Tabs.Content value="project" class="flex flex-col h-full overflow-hidden contain-strict">
+                        <Show when={props.activeTab() === "project"}>
+                          <ProjectTab />
                         </Show>
                       </Tabs.Content>
                     </Show>
@@ -203,7 +243,7 @@ export function SessionSidePanel(props: {
                           tab={tab}
                           activeTab={props.activeTab}
                           tabs={props.tabs}
-                          view={props.view}
+                          view={props.vm.view}
                           handoffFiles={props.handoffFiles}
                           file={props.file}
                           comments={props.comments}
