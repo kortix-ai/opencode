@@ -6,6 +6,7 @@ import { Ripgrep } from "../../file/ripgrep"
 import { LSP } from "../../lsp"
 import { Instance } from "../../project/instance"
 import { lazy } from "../../util/lazy"
+import { errors } from "../error"
 
 export const FileRoutes = lazy(() =>
   new Hono()
@@ -192,6 +193,172 @@ export const FileRoutes = lazy(() =>
       async (c) => {
         const content = await File.status()
         return c.json(content)
+      },
+    )
+    .delete(
+      "/file",
+      describeRoute({
+        summary: "Delete file",
+        description: "Delete a file or directory recursively.",
+        operationId: "file.delete",
+        responses: {
+          ...errors(400, 404),
+          200: {
+            description: "File deleted successfully",
+            content: {
+              "application/json": {
+                schema: resolver(z.boolean()),
+              },
+            },
+          },
+        },
+      }),
+      validator(
+        "json",
+        z.object({
+          path: z.string(),
+        }),
+      ),
+      async (c) => {
+        const body = c.req.valid("json")
+        await File.remove(body.path)
+        return c.json(true)
+      },
+    )
+    .post(
+      "/file/mkdir",
+      describeRoute({
+        summary: "Create directory",
+        description: "Create a directory, including any missing parent directories.",
+        operationId: "file.mkdir",
+        responses: {
+          ...errors(400),
+          200: {
+            description: "Directory created successfully",
+            content: {
+              "application/json": {
+                schema: resolver(z.boolean()),
+              },
+            },
+          },
+        },
+      }),
+      validator(
+        "json",
+        z.object({
+          path: z.string(),
+        }),
+      ),
+      async (c) => {
+        const body = c.req.valid("json")
+        await File.mkdir(body.path)
+        return c.json(true)
+      },
+    )
+    .post(
+      "/file/rename",
+      describeRoute({
+        summary: "Rename file",
+        description: "Rename or move a file or directory. Creates missing parent directories for the target path.",
+        operationId: "file.rename",
+        responses: {
+          ...errors(400, 404),
+          200: {
+            description: "File renamed successfully",
+            content: {
+              "application/json": {
+                schema: resolver(z.boolean()),
+              },
+            },
+          },
+        },
+      }),
+      validator(
+        "json",
+        z.object({
+          from: z.string(),
+          to: z.string(),
+        }),
+      ),
+      async (c) => {
+        const body = c.req.valid("json")
+        await File.rename(body.from, body.to)
+        return c.json(true)
+      },
+    )
+    .post(
+      "/file/upload",
+      describeRoute({
+        summary: "Upload files",
+        description:
+          "Upload one or more files via multipart/form-data. Each file field should use the relative path as the field name (e.g., 'src/image.png'). Alternatively, include a 'path' field to specify a target directory — uploaded files will be placed there using their original filenames.",
+        operationId: "file.upload",
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  path: {
+                    type: "string",
+                    description: "Optional target directory for uploaded files",
+                  },
+                  file: {
+                    type: "string",
+                    format: "binary",
+                    description: "File to upload (use relative path as field name, or 'file' with a path field)",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...errors(400),
+          200: {
+            description: "Upload results",
+            content: {
+              "application/json": {
+                schema: resolver(
+                  z.array(
+                    z.object({
+                      path: z.string(),
+                      size: z.number(),
+                    }),
+                  ),
+                ),
+              },
+            },
+          },
+        },
+      }),
+      async (c) => {
+        const body = await c.req.parseBody({ all: true })
+        const targetDir = typeof body["path"] === "string" ? body["path"] : undefined
+        const results: { path: string; size: number }[] = []
+
+        for (const [key, value] of Object.entries(body)) {
+          if (key === "path") continue
+          const files = Array.isArray(value) ? value : [value]
+          for (const file of files) {
+            if (typeof file === "string") continue
+            if (!(file instanceof globalThis.File)) continue
+            const dest = targetDir
+              ? targetDir + "/" + file.name
+              : key === "file" || key === "file[]"
+                ? file.name
+                : key
+            const buffer = await file.arrayBuffer()
+            await File.upload(dest, buffer)
+            results.push({ path: dest, size: buffer.byteLength })
+          }
+        }
+
+        if (!results.length) {
+          throw new Error("No files found in request body")
+        }
+        return c.json(results)
       },
     ),
 )

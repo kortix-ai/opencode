@@ -90,6 +90,22 @@ export type EventFileEdited = {
   }
 }
 
+export type OutputFormatText = {
+  type: "text"
+}
+
+export type JsonSchema = {
+  [key: string]: unknown
+}
+
+export type OutputFormatJsonSchema = {
+  type: "json_schema"
+  schema: JsonSchema
+  retryCount?: number
+}
+
+export type OutputFormat = OutputFormatText | OutputFormatJsonSchema
+
 export type FileDiff = {
   file: string
   before: string
@@ -106,6 +122,7 @@ export type UserMessage = {
   time: {
     created: number
   }
+  format?: OutputFormat
   summary?: {
     title?: string
     body?: string
@@ -152,6 +169,14 @@ export type MessageAbortedError = {
   }
 }
 
+export type StructuredOutputError = {
+  name: "StructuredOutputError"
+  data: {
+    message: string
+    retries: number
+  }
+}
+
 export type ContextOverflowError = {
   name: "ContextOverflowError"
   data: {
@@ -189,6 +214,7 @@ export type AssistantMessage = {
     | UnknownError
     | MessageOutputLengthError
     | MessageAbortedError
+    | StructuredOutputError
     | ContextOverflowError
     | ApiError
   parentID: string
@@ -203,6 +229,7 @@ export type AssistantMessage = {
   summary?: boolean
   cost: number
   tokens: {
+    total?: number
     input: number
     output: number
     reasoning: number
@@ -211,6 +238,7 @@ export type AssistantMessage = {
       write: number
     }
   }
+  structured?: unknown
   variant?: string
   finish?: string
 }
@@ -418,6 +446,7 @@ export type StepFinishPart = {
   snapshot?: string
   cost: number
   tokens: {
+    total?: number
     input: number
     output: number
     reasoning: number
@@ -839,6 +868,7 @@ export type EventSessionError = {
       | UnknownError
       | MessageOutputLengthError
       | MessageAbortedError
+      | StructuredOutputError
       | ContextOverflowError
       | ApiError
   }
@@ -1518,7 +1548,8 @@ export type ProviderConfig = {
         [key: string]: string
       }
       provider?: {
-        npm: string
+        npm?: string
+        api?: string
       }
       /**
        * Variant-specific configuration
@@ -1822,6 +1853,10 @@ export type Config = {
      * Enable pruning of old tool outputs (default: true)
      */
     prune?: boolean
+    /**
+     * Token buffer for compaction. Leaves enough window to avoid overflow during compaction.
+     */
+    reserved?: number
   }
   experimental?: {
     disable_paste_summary?: boolean
@@ -3396,6 +3431,7 @@ export type SessionPromptData = {
     tools?: {
       [key: string]: boolean
     }
+    format?: OutputFormat
     system?: string
     variant?: string
     parts: Array<TextPartInput | FilePartInput | AgentPartInput | SubtaskPartInput>
@@ -3583,6 +3619,7 @@ export type SessionPromptAsyncData = {
     tools?: {
       [key: string]: boolean
     }
+    format?: OutputFormat
     system?: string
     variant?: string
     parts: Array<TextPartInput | FilePartInput | AgentPartInput | SubtaskPartInput>
@@ -4031,7 +4068,8 @@ export type ProviderListResponses = {
             [key: string]: string
           }
           provider?: {
-            npm: string
+            npm?: string
+            api?: string
           }
           variants?: {
             [key: string]: {
@@ -4224,6 +4262,39 @@ export type FindSymbolsResponses = {
 
 export type FindSymbolsResponse = FindSymbolsResponses[keyof FindSymbolsResponses]
 
+export type FileDeleteData = {
+  body?: {
+    path: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/file"
+}
+
+export type FileDeleteErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type FileDeleteError = FileDeleteErrors[keyof FileDeleteErrors]
+
+export type FileDeleteResponses = {
+  /**
+   * File deleted successfully
+   */
+  200: boolean
+}
+
+export type FileDeleteResponse = FileDeleteResponses[keyof FileDeleteResponses]
+
 export type FileListData = {
   body?: never
   path?: never
@@ -4279,6 +4350,108 @@ export type FileStatusResponses = {
 }
 
 export type FileStatusResponse = FileStatusResponses[keyof FileStatusResponses]
+
+export type FileMkdirData = {
+  body?: {
+    path: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/file/mkdir"
+}
+
+export type FileMkdirErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type FileMkdirError = FileMkdirErrors[keyof FileMkdirErrors]
+
+export type FileMkdirResponses = {
+  /**
+   * Directory created successfully
+   */
+  200: boolean
+}
+
+export type FileMkdirResponse = FileMkdirResponses[keyof FileMkdirResponses]
+
+export type FileRenameData = {
+  body?: {
+    from: string
+    to: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/file/rename"
+}
+
+export type FileRenameErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type FileRenameError = FileRenameErrors[keyof FileRenameErrors]
+
+export type FileRenameResponses = {
+  /**
+   * File renamed successfully
+   */
+  200: boolean
+}
+
+export type FileRenameResponse = FileRenameResponses[keyof FileRenameResponses]
+
+export type FileUploadData = {
+  body: {
+    /**
+     * Optional target directory
+     */
+    path?: string
+    /**
+     * File to upload
+     */
+    file?: Blob | File
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/file/upload"
+}
+
+export type FileUploadErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type FileUploadError = FileUploadErrors[keyof FileUploadErrors]
+
+export type FileUploadResponses = {
+  /**
+   * Upload results
+   */
+  200: Array<{
+    path: string
+    size: number
+  }>
+}
+
+export type FileUploadResponse = FileUploadResponses[keyof FileUploadResponses]
 
 export type McpStatusData = {
   body?: never

@@ -1161,6 +1161,12 @@ export namespace Config {
         .object({
           auto: z.boolean().optional().describe("Enable automatic compaction when context is full (default: true)"),
           prune: z.boolean().optional().describe("Enable pruning of old tool outputs (default: true)"),
+          reserved: z
+            .number()
+            .int()
+            .min(0)
+            .optional()
+            .describe("Token buffer for compaction. Leaves enough window to avoid overflow during compaction."),
         })
         .optional(),
       experimental: z
@@ -1359,10 +1365,30 @@ export namespace Config {
     return global()
   }
 
+  function projectConfigFile() {
+    const candidates = ["opencode.jsonc", "opencode.json"].map((file) => path.join(Instance.directory, file))
+    for (const file of candidates) {
+      if (existsSync(file)) return file
+    }
+    return candidates[1]
+  }
+
   export async function update(config: Info) {
-    const filepath = path.join(Instance.directory, "config.json")
-    const existing = await loadFile(filepath)
-    await Bun.write(filepath, JSON.stringify(mergeDeep(existing, config), null, 2))
+    const filepath = projectConfigFile()
+    const before = await Bun.file(filepath)
+      .text()
+      .catch((err) => {
+        if (err.code === "ENOENT") return "{}"
+        throw new JsonError({ path: filepath }, { cause: err })
+      })
+
+    if (filepath.endsWith(".jsonc")) {
+      const updated = patchJsonc(before, config)
+      await Bun.write(filepath, updated)
+    } else {
+      const existing = parseConfig(before, filepath)
+      await Bun.write(filepath, JSON.stringify(mergeDeep(existing, config), null, 2))
+    }
     await Instance.dispose()
   }
 

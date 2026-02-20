@@ -10,6 +10,8 @@ import { Flag } from "../flag/flag"
 declare global {
   const OPENCODE_VERSION: string
   const OPENCODE_CHANNEL: string
+  const OPENCODE_NPM_PACKAGE: string
+  const OPENCODE_GITHUB_REPO: string
 }
 
 export namespace Installation {
@@ -104,7 +106,7 @@ export namespace Installation {
     for (const check of checks) {
       const output = await check.command()
       const installedName =
-        check.name === "brew" || check.name === "choco" || check.name === "scoop" ? "opencode" : "opencode-ai"
+        check.name === "brew" || check.name === "choco" || check.name === "scoop" ? "opencode" : NPM_PACKAGE
       if (output.includes(installedName)) {
         return check.name
       }
@@ -138,16 +140,26 @@ export namespace Installation {
         })
         break
       case "npm":
-        cmd = $`npm install -g opencode-ai@${target}`
+        cmd = $`npm install -g ${NPM_PACKAGE}@${target}`
         break
       case "pnpm":
-        cmd = $`pnpm install -g opencode-ai@${target}`
+        cmd = $`pnpm install -g ${NPM_PACKAGE}@${target}`
         break
       case "bun":
-        cmd = $`bun install -g opencode-ai@${target}`
+        cmd = $`bun install -g ${NPM_PACKAGE}@${target}`
         break
       case "brew": {
         const formula = await getBrewFormula()
+        if (formula.includes("/")) {
+          cmd =
+            $`brew tap anomalyco/tap && cd "$(brew --repo anomalyco/tap)" && git pull --ff-only && brew upgrade ${formula}`.env(
+              {
+                HOMEBREW_NO_AUTO_UPDATE: "1",
+                ...process.env,
+              },
+            )
+          break
+        }
         cmd = $`brew upgrade ${formula}`.env({
           HOMEBREW_NO_AUTO_UPDATE: "1",
           ...process.env,
@@ -181,6 +193,8 @@ export namespace Installation {
 
   export const VERSION = typeof OPENCODE_VERSION === "string" ? OPENCODE_VERSION : "local"
   export const CHANNEL = typeof OPENCODE_CHANNEL === "string" ? OPENCODE_CHANNEL : "local"
+  export const NPM_PACKAGE = typeof OPENCODE_NPM_PACKAGE === "string" ? OPENCODE_NPM_PACKAGE : "opencode-ai"
+  export const GITHUB_REPO = typeof OPENCODE_GITHUB_REPO === "string" ? OPENCODE_GITHUB_REPO : "anomalyco/opencode"
   export const USER_AGENT = `opencode/${CHANNEL}/${VERSION}/${Flag.OPENCODE_CLIENT}`
 
   export async function latest(installMethod?: Method) {
@@ -188,14 +202,19 @@ export namespace Installation {
 
     if (detectedMethod === "brew") {
       const formula = await getBrewFormula()
-      if (formula === "opencode") {
-        return fetch("https://formulae.brew.sh/api/formula/opencode.json")
-          .then((res) => {
-            if (!res.ok) throw new Error(res.statusText)
-            return res.json()
-          })
-          .then((data: any) => data.versions.stable)
+      if (formula.includes("/")) {
+        const infoJson = await $`brew info --json=v2 ${formula}`.quiet().text()
+        const info = JSON.parse(infoJson)
+        const version = info.formulae?.[0]?.versions?.stable
+        if (!version) throw new Error(`Could not detect version for tap formula: ${formula}`)
+        return version
       }
+      return fetch("https://formulae.brew.sh/api/formula/opencode.json")
+        .then((res) => {
+          if (!res.ok) throw new Error(res.statusText)
+          return res.json()
+        })
+        .then((data: any) => data.versions.stable)
     }
 
     if (detectedMethod === "npm" || detectedMethod === "bun" || detectedMethod === "pnpm") {
@@ -205,7 +224,7 @@ export namespace Installation {
         return reg.endsWith("/") ? reg.slice(0, -1) : reg
       })
       const channel = CHANNEL
-      return fetch(`${registry}/opencode-ai/${channel}`)
+      return fetch(`${registry}/${NPM_PACKAGE}/${channel}`)
         .then((res) => {
           if (!res.ok) throw new Error(res.statusText)
           return res.json()
@@ -236,7 +255,7 @@ export namespace Installation {
         .then((data: any) => data.version)
     }
 
-    return fetch("https://api.github.com/repos/anomalyco/opencode/releases/latest")
+    return fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`)
       .then((res) => {
         if (!res.ok) throw new Error(res.statusText)
         return res.json()

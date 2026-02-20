@@ -78,6 +78,9 @@ export namespace Server {
           })
         })
         .use((c, next) => {
+          // Allow CORS preflight requests to succeed without auth.
+          // Browser clients sending Authorization headers will preflight with OPTIONS.
+          if (c.req.method === "OPTIONS") return next()
           const password = Flag.OPENCODE_SERVER_PASSWORD
           if (!password) return next()
           const username = Flag.OPENCODE_SERVER_USERNAME ?? "opencode"
@@ -107,7 +110,12 @@ export namespace Server {
 
               if (input.startsWith("http://localhost:")) return input
               if (input.startsWith("http://127.0.0.1:")) return input
-              if (input === "tauri://localhost" || input === "http://tauri.localhost") return input
+              if (
+                input === "tauri://localhost" ||
+                input === "http://tauri.localhost" ||
+                input === "https://tauri.localhost"
+              )
+                return input
 
               // *.opencode.ai (https only, adjust if needed)
               if (/^https:\/\/([a-z0-9-]+\.)*opencode\.ai$/.test(input)) {
@@ -408,6 +416,38 @@ export namespace Server {
           async (c) => {
             const modes = await Agent.list()
             return c.json(modes)
+          },
+        )
+        .patch(
+          "/agent/:name",
+          describeRoute({
+            summary: "Update agent",
+            description: "Update an agent's configuration by name.",
+            operationId: "agent.update",
+            responses: {
+              200: {
+                description: "Updated agent",
+                content: {
+                  "application/json": {
+                    schema: resolver(Agent.Info),
+                  },
+                },
+              },
+              ...errors(400),
+            },
+          }),
+          validator(
+            "param",
+            z.object({
+              name: z.string(),
+            }),
+          ),
+          validator("json", Agent.Patch),
+          async (c) => {
+            const name = c.req.valid("param").name
+            const patch = c.req.valid("json")
+            const agent = await Agent.update(name, patch)
+            return c.json(agent)
           },
         )
         .get(
